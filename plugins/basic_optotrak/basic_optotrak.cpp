@@ -62,5 +62,5 @@ NervePluginBase* TutorialPluginFactory::createPluginObject()
 
 const char* TutorialPluginFactory::getName()
 {
-	return "Tutorial Plugin";
+	return "Basic Optotrak";
 }
