@@ -27,6 +27,8 @@ public:
 	}
 	~OptotrakPlugin()
 	{
+		mpAPI->hideIPlugin();
+		delete iOptotrak;
 		mpAPI->callPluginFromMainThread(this,DESTROY_GUI,NerveAPI::CALLBACK_REQUESTS_BLOCKING);
 	}
 	void callbackFromMainApplicationThread(int call_id)

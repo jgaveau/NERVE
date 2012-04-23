@@ -22,13 +22,20 @@ struct IOPTOTRAK OptotrakParams
 	int nFlags;
 	std::string cameraParamFile;
 };
-
+struct IOPTOTRAK RealtimeData
+{
+	float x;
+	float y;
+	float z;
+};
 
 class IOptotrak_private;
 class IOPTOTRAK IOptotrak : public IPlugin
 {
 public:
-	void initOptotrak(const OptotrakParams&);
+	bool initOptotrak(const OptotrakParams&);
+	void initRealtime();
+	void getRealtimeData(RealtimeData&);
 private:
 	friend class OptotrakPlugin;
 	IOptotrak_private* d_;

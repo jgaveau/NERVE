@@ -3,6 +3,7 @@
 #include "nrvApp/NervePluginBase.h"
 #include "osgwindow/osgwindow_interface.h"
 #include "FileWriter/IFileWriter.h"
+#include "optotrak/IOptotrak.h"
 #include "nrvThread/NerveThread.h"
 #include "nrvThread/NerveModule.h"
 
@@ -16,9 +17,9 @@
 
 class PositionModule : public NerveModule
 {
-	class BufferGetter : public NerveModule
+	
 public:
-	PositionModule(CenterOut* cenout, IOSGWindow* window, float scale):co(cenout),w(window),s(scale),writeIndex(-1),bufferData(false),bufferRate(0.f){}
+	PositionModule(CenterOut* cenout, IOSGWindow* window, float scale):co(cenout),w(window),s(scale){}
 	void moduleOperation(NerveModuleUser*)
 	{
 		CenterOut::CursorPosition pos;
@@ -33,6 +34,28 @@ public:
 private:
 	CenterOut* co;
 	IOSGWindow* w;
+	float s;
+};
+class OptoPositionModule : public NerveModule
+{
+	
+public:
+	OptoPositionModule(CenterOut* cenout, IOptotrak* opto):co(cenout),o(opto){}
+	void moduleOperation(NerveModuleUser*)
+	{
+		CenterOut::CursorPosition pos;
+		RealtimeData data;
+		o->getRealtimeData(data);
+		pos.x = data.x/10;
+		pos.y = data.y/10;
+		pos.z = data.z/10;
+		co->setCursorPosition(pos);
+		OpenThreads::Thread::microSleep(100);
+	}
+	
+private:
+	CenterOut* co;
+	IOptotrak* o;
 	float s;
 };
 
@@ -52,6 +75,7 @@ public:
 
 		createWindow();
 		createOutputFile();
+		createOptotrak();
 	}
 	~CenterOutPlugin()
 	{
@@ -69,6 +93,12 @@ public:
 			mpAPI->unbindIPlugin(iFile);
 		}
 		mpAPI->cancelChildPlugin(file_plugin);
+		//clean up the file writer child plugin
+		if(iOptotrak)
+		{
+			mpAPI->unbindIPlugin(iOptotrak);
+		}
+		mpAPI->cancelChildPlugin(optotrak_plugin);
 		mpAPI->callPluginFromMainThread(this,DESTROY_GUI,NerveAPI::CALLBACK_REQUESTS_BLOCKING);
 	}
 	void callbackFromMainApplicationThread(int call_id)
@@ -103,10 +133,10 @@ public:
 		iWindow->setupInWindow();
 		iWindow->applyChanges();
 
-		PositionModule* m = new PositionModule(&cenOut, iWindow, 20.f);
+		/*PositionModule* m = new PositionModule(&cenOut, iWindow, 20.f);
 		m->setOperateAction(NerveModule::DONT_REMOVE_MODULE);
 		m->setRemoveAction(NerveModule::DELETE_MODULE);
-		posThread.addModule(*m);
+		posThread.addModule(*m);*/
 	}
 	void createOutputFile()
 	{
@@ -132,6 +162,29 @@ public:
 		for(int i=0;i<5;++i) fs->filestr()<<buffer[i]<<" ";
 		fs->flush();
 	}
+	void createOptotrak()
+	{
+		optotrak_plugin = mpAPI->createPlugin("Optotrak Interface <Optotrak.dll>");
+		printf("optotrak_plugin: %s\n",optotrak_plugin.c_str());
+		IPlugin* ip = mpAPI->bindIPlugin(optotrak_plugin);
+		printf("ip: %p\n",ip);
+		iOptotrak = dynamic_cast<IOptotrak*>(ip);
+		printf("iOptotrak: %p\n",iOptotrak);
+	}
+	void initOptotrak()
+	{
+		OptotrakParams params;
+		params.cameraParamFile = "standard.cam";
+		iOptotrak->initOptotrak(params);
+	}
+	void initRealtime()
+	{
+		iOptotrak->initRealtime();
+		OptoPositionModule* module = new OptoPositionModule(&cenOut,iOptotrak);
+		module->setOperateAction(NerveModule::DONT_REMOVE_MODULE);
+		module->setRemoveAction(NerveModule::DELETE_MODULE);
+		posThread.addModule(*module);
+	}
 	void startTask(){cenOut.start();}
 private:
 	NerveThread posThread;
@@ -141,6 +194,8 @@ private:
 	std::string window_plugin;
 	IFileWriter* iFile;
 	std::string file_plugin;
+	IOptotrak* iOptotrak;
+	std::string optotrak_plugin;
 	CenterOut cenOut;
 
 	void createGui()
@@ -156,4 +211,7 @@ private:
 		mpAPI->removeUI(gui);
 		delete gui;
 	}
+
+	void MovementDuration ();
+	
 };

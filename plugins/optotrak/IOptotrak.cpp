@@ -1,16 +1,53 @@
 #include "IOptotrak.h"
 #include "OptotrakWrapper.h"
 #include <OpenThreads/Thread>
+#include "nrvThread/NerveThread.h"
+#include "nrvThread/NerveModule.h"
+#include "nrvToolbox/TriBuf.h"
 #include "ndtypes.h"
 #include "ndpack.h"
 #include "ndopto.h"
 
 #define NUM_MARKERS 1
+
+class RealtimeOptotrakModule : public NerveModule
+{
+public:
+	RealtimeOptotrakModule():isInitialized(false){}
+	void getData(RealtimeData& data)
+	{
+		data = buffer.getData();
+	}
+protected:
+	void moduleOperation(NerveModuleUser*)
+	{
+		if(DataGetLatest3D(&uFrameNumber,&uElements,&uFlags,&pos3d) ==0)
+		{
+			
+			current.x = pos3d.x;
+			current.y = pos3d.y;
+			current.z = pos3d.z;
+			buffer.setData(current);
+		}
+		OpenThreads::Thread::microSleep(1000);
+
+	}
+	unsigned int uFrameNumber;
+	unsigned int uElements;
+	unsigned int uFlags;
+	Position3d pos3d;
+	RealtimeData current;
+	TriBuf<RealtimeData> buffer;
+	RealtimeData ref;
+	bool isInitialized;
+};
 class IOptotrak_private
 {
 public:
+	IOptotrak_private():realtime(0),initialized(false){}
 	bool initOptotrak(const OptotrakParams& p)
 	{
+		printf("initOptotrak\n");
 		int nNumSensors, nNumOdaus, nMarkers;
 		char szNDErrorString[MAX_ERROR_STRING_LENGTH + 1];
 
@@ -81,9 +118,42 @@ public:
 			printf("Failed in OptotrakModule::initOptotrak - OptotrakActivateMarkers\n");
 			return false;
 		}
+		initialized = true;
 		return true;
 	}
+	void initRealtime()
+	{
+		if(initialized==true && !thr.isRunning())
+		{
+			realtime = new RealtimeOptotrakModule();
+			realtime->setOperateAction(NerveModule::DONT_REMOVE_MODULE);
+			realtime->setRemoveAction(NerveModule::DELETE_MODULE);
+			thr.addModule(*realtime);
+			thr.start();
+		}
+	}
+	void getRealtimeData(RealtimeData& data)
+	{
+		if(realtime == 0) return;
+		realtime->getData(data);
+	}
+	~IOptotrak_private()
+	{
+		thr.cancel();
+		while(thr.isRunning()) OpenThreads::Thread::microSleep(10);
+
+		if(OptotrakDeActivateMarkers())
+		{
+			printf("Failed in IOptotrak::dtor - OptotrakDeActivateMarkers\n");
+		}
+	}
+private:
+	NerveThread thr;
+	bool initialized;
+	RealtimeOptotrakModule* realtime;
 };
 IOptotrak::IOptotrak(){d_=new IOptotrak_private();}
 IOptotrak::~IOptotrak(){delete d_;}
-void IOptotrak::initOptotrak(const OptotrakParams &p){d_->initOptotrak(p);}
+bool IOptotrak::initOptotrak(const OptotrakParams &p){return d_->initOptotrak(p);}
+void IOptotrak::initRealtime(){return d_->initRealtime();}
+void IOptotrak::getRealtimeData(RealtimeData& r){return d_->getRealtimeData(r);}

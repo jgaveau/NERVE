@@ -42,4 +42,5 @@ target_link_libraries(${PLUGIN_FILENAME} NerveApp ${QT_LIBRARIES}
 						${OPENSCENEGRAPH_LIBRARIES} 
 						../../../NerveProjects/plugins/osgwindow/release/osgwindow
 						../../../NerveProjects/plugins/FileWriter/release/FileWriter
+						../../../NerveProjects/plugins/optotrak/release/optotrak
 						)
