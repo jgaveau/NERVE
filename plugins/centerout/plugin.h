@@ -6,6 +6,7 @@
 #include "optotrak/IOptotrak.h"
 #include "nrvThread/NerveThread.h"
 #include "nrvThread/NerveModule.h"
+#include "nrvToolbox/RebroadcastManager.h"
 
 #include <iomanip>
 
@@ -100,6 +101,7 @@ public:
 		}
 		mpAPI->cancelChildPlugin(optotrak_plugin);
 		mpAPI->callPluginFromMainThread(this,DESTROY_GUI,NerveAPI::CALLBACK_REQUESTS_BLOCKING);
+
 	}
 	void callbackFromMainApplicationThread(int call_id)
 	{
@@ -177,6 +179,7 @@ public:
 		params.cameraParamFile = "standard.cam";
 		iOptotrak->initOptotrak(params);
 	}
+
 	void initRealtime()
 	{
 		iOptotrak->initRealtime();
@@ -186,6 +189,14 @@ public:
 		posThread.addModule(*module);
 	}
 	void startTask(){cenOut.start();}
+	void MovementDuration (double value)
+	{
+		printf ("value%f\n",value);
+		rebroadcastManager->rebroadcastAll();
+		double x = rebroadcastManager->getCurrentValue_double("Hod_duration_end");
+		printf("rebroadcast version: %f\n",x);
+	}
+
 private:
 	NerveThread posThread;
 	NerveAPI* mpAPI;
@@ -197,10 +208,13 @@ private:
 	IOptotrak* iOptotrak;
 	std::string optotrak_plugin;
 	CenterOut cenOut;
+	RebroadcastManager* rebroadcastManager;
 
 	void createGui()
 	{
 		gui=new CenterOutGui(this);
+		rebroadcastManager = gui->getRebroadcastManagerPtr();
+		cenOut.setGui(rebroadcastManager);
 		mpAPI->exposeUI(gui);
 		mpAPI->setTakeOwnershipOfCreatedPlugins(true);
 		mpAPI->setWillAcceptChildUIs(true);
@@ -211,7 +225,5 @@ private:
 		mpAPI->removeUI(gui);
 		delete gui;
 	}
-
-	void MovementDuration ();
 	
 };

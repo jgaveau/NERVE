@@ -123,7 +123,7 @@ public:
 	}
 	void initRealtime()
 	{
-		if(initialized==true && !thr.isRunning())
+		if(initialized==false && !thr.isRunning())
 		{
 			realtime = new RealtimeOptotrakModule();
 			realtime->setOperateAction(NerveModule::DONT_REMOVE_MODULE);

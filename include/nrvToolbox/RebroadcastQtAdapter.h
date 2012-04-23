@@ -31,7 +31,7 @@ public:
 		guiObject = NULL;
 		if (obj!=NULL)
 			setQObject(obj);
-	};
+	}
 	void setQObject(QObject* obj)
 	{
 		if ( dynamic_cast<QPushButton*>(obj) )
@@ -63,7 +63,7 @@ public:
 			return guiObject->objectName().toStdString();
 		else
 			return std::string("");
-	};
+	}
 	void sync()
 	{
 	}
@@ -88,7 +88,7 @@ public:
 		guiObject = NULL;
 		if (obj!=NULL)
 			setQObject(obj);
-	};
+	}
 	void setQObject(QObject* obj)
 	{
 		if ( dynamic_cast<QCheckBox*>(obj) )
@@ -184,7 +184,7 @@ public:
 			return guiObject->objectName().toStdString();
 		else
 			return std::string("");
-	};
+	}
 	void sync()
 	{
 		if ( type == QCHECKBOX )
@@ -230,7 +230,7 @@ public:
 		guiObject = NULL;
 		if (obj!=NULL)
 			setQObject(obj);
-	};
+	}
 	void setQObject(QObject* obj)
 	{
 		if ( dynamic_cast<QLineEdit*>(obj) )
@@ -309,7 +309,7 @@ public:
 			return guiObject->objectName().toStdString();
 		else
 			return std::string("");
-	};
+	}
 	void sync()
 	{
 		if ( type == QLINEEDIT )

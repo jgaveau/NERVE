@@ -1,6 +1,7 @@
 #pragma once
 #include "nrvThread/NerveThread.h"
 #include "nrvThread/NerveModule.h"
+#include "nrvToolbox/RebroadcastManager.h"
 #include "nrvToolbox/TriBuf.h"
 #include "SceneElements.h"
 #include <osg/Timer>
@@ -75,7 +76,8 @@ public:
 
 		srand(time(0));
 	}
-	~CenterOut(){logicThread.cancel(); while(logicThread.isRunning()) OpenThreads::Thread::microSleep(1);}
+	~CenterOut(){logicThread.cancel(); while(logicThread.isRunning()) OpenThreads::Thread::microSleep(1);delete rebroadcastManager;
+}
 	osg::ref_ptr<osg::Group> getScene(){return scene->getNodePtr();}
 	osg::ref_ptr<osg::NodeCallback> getCameraCallback(){return camera.get();}
 	void start()
@@ -83,13 +85,17 @@ public:
 		logicThread.addModule(*(new TaskStartModule(this)));
 		if(!logicThread.isRunning()) logicThread.start();
 	}
+	void setGui(RebroadcastManager* rbm)
+	{
+		rebroadcastManager = rbm;
+	}
 private:
 	osg::ref_ptr<GroupElement> scene;
 	osg::ref_ptr<SphereElement> center;
 	osg::ref_ptr<SphereElement> target;
 	osg::ref_ptr<SphereElement> cursor;
 	osg::ref_ptr<CameraCallback> camera;
-
+	RebroadcastManager* rebroadcastManager;
 	NerveThread logicThread;
 	LogicModule* logicModule;
 	
@@ -143,7 +149,9 @@ private:
 		}
 		void check()
 		{
-			if(timer.time_m() > 1000) co->changeState(CenterOut::MOVEMENT);
+			double Hold_duration_start = co->rebroadcastManager->getCurrentValue_double("Hold_duration_start");
+			if(timer.time_m() > Hold_duration_start) co->changeState(CenterOut::MOVEMENT);
+			
 			if(co->spheresAreTouching(co->cursor,co->center) == false) co->changeState(CenterOut::INTERTRIAL);
 		}
 	};
@@ -162,7 +170,8 @@ private:
 		}
 		void check()
 		{
-			if(timer.time_m() > 5000) co->changeState(CenterOut::INTERTRIAL);
+			double MovementDuration = co->rebroadcastManager->getCurrentValue_double("MovementDuration");
+			if(timer.time_m() > MovementDuration) co->changeState(CenterOut::INTERTRIAL);
 			if(co->spheresAreTouching(co->cursor,co->target) == true) co->changeState(CenterOut::HOLD_B);
 		}
 	};
@@ -180,7 +189,8 @@ private:
 		}
 		void check()
 		{
-			if(timer.time_m() > 500) co->changeState(CenterOut::FEEDBACK);
+			double Hold_duration_end = co->rebroadcastManager->getCurrentValue_double("Hold_duration_end");
+			if(timer.time_m() > Hold_duration_end) co->changeState(CenterOut::FEEDBACK);
 			if(co->spheresAreTouching(co->cursor,co->target) == false) co->changeState(CenterOut::INTERTRIAL);
 		}
 	};
@@ -222,6 +232,7 @@ private:
 	friend class TaskStartModule;
 	void performLogic()
 	{
+		getGuiValues();
 		updateCursor();
 		currentState->check();
 	}
@@ -249,6 +260,10 @@ private:
 	{
 		CenterOut::CursorPosition p(cpBuffer.getData());
 		cursor->setTranslation(p.x,p.y,p.z);
+	}
+	void getGuiValues()
+	{
+		rebroadcastManager->rebroadcastAll();
 	}
 	void newTrial()
 	{

@@ -75,7 +75,7 @@
          </rect>
         </property>
        </widget>
-       <widget class="QDoubleSpinBox" name="Hod_duration_end">
+       <widget class="QDoubleSpinBox" name="Hold_duration_end">
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -131,7 +131,7 @@
          </rect>
         </property>
         <property name="text">
-         <string>Hod duration end</string>
+         <string>Hold duration end</string>
         </property>
        </widget>
        <widget class="QLineEdit" name="lineEdit_4">

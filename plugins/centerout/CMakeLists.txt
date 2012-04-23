@@ -8,6 +8,8 @@ set(SRCFILES
 	${PLUGIN_FILENAME}.ui
 	GuiImpl.cpp
 	CenterOut.cpp
+	../../src/nrvApp/RebroadcastManager.cpp
+	../../src/nrvApp/Rebroadcast.cpp
 	)
 set(HDRFILES
 	plugin.h
@@ -20,6 +22,7 @@ set(FILES_TO_UIC
 	)
 set(FILES_TO_MOC
 	GuiHeader.h
+	../../include/nrvToolbox/RebroadcastQtAdapter.h
 	)
 
 

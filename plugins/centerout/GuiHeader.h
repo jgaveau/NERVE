@@ -4,6 +4,8 @@
 #include <QString>
 #include <QTabWidget>
 #include <QLayout>
+#include "nrvToolbox/RebroadcastManager.h"
+#include "nrvToolbox/RebroadcastQtAdapter.h"
 
 class CenterOutPlugin;
 
@@ -14,6 +16,12 @@ public:
 	CenterOutGui(CenterOutPlugin* p):plugin(p),uisAccepted(0)
 	{
 		ui.setupUi(this);
+		
+		connect(ui.MovementDuration, SIGNAL(valueChanged(double)),this,SLOT(on_MovementDuration_valueChanged2(double)));
+		rebroadcastQtAdapter.setRebroadcastManager(&rebroadcastManager);
+		rebroadcastQtAdapter.addWithChildren(this);
+
+		
 	}
 	void acceptChildUI(QWidget* child)
 	{
@@ -25,12 +33,20 @@ public:
 		}
 		++uisAccepted;
 	}
+	RebroadcastManager* getRebroadcastManagerPtr()
+	{
+		return rebroadcastManager.createReciprocallyConnectedManager();
+	}
 public slots:
 	void on_startButton_clicked();
 	void on_initializeOptotrakButton_clicked();
 	void on_initializeRealtimeButton_clicked();
+	void on_MovementDuration_valueChanged2(double value);
 protected:
 	CenterOutPlugin* plugin;
 	Ui::TutorialDialog ui;
 	int uisAccepted;
+
+	RebroadcastManager rebroadcastManager;
+	RebroadcastQtAdapter rebroadcastQtAdapter;
 };

@@ -13,7 +13,7 @@ void CenterOutGui::on_initializeRealtimeButton_clicked()
 {
 	plugin->initRealtime();
 }
-//void CenterOutGui::MovementDuration_()
-//
-//	plugin->MovementDuration();
-//}
+void CenterOutGui::on_MovementDuration_valueChanged2(double value)
+{
+	plugin->MovementDuration(value);
+}
