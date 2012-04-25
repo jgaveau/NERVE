@@ -47,9 +47,9 @@ public:
 		CenterOut::CursorPosition pos;
 		RealtimeData data;
 		o->getRealtimeData(data);
-		pos.x = data.x/10;
-		pos.y = data.y/10;
-		pos.z = data.z/10;
+		pos.x = data.x;
+		pos.y = data.y;
+		pos.z = data.z;
 		co->setCursorPosition(pos);
 		OpenThreads::Thread::microSleep(100);
 	}
@@ -188,14 +188,9 @@ public:
 		module->setRemoveAction(NerveModule::DELETE_MODULE);
 		posThread.addModule(*module);
 	}
+	void setZero(){cenOut.setZero();}
 	void startTask(){cenOut.start();}
-	void MovementDuration (double value)
-	{
-		printf ("value%f\n",value);
-		rebroadcastManager->rebroadcastAll();
-		double x = rebroadcastManager->getCurrentValue_double("Hod_duration_end");
-		printf("rebroadcast version: %f\n",x);
-	}
+	
 
 private:
 	NerveThread posThread;

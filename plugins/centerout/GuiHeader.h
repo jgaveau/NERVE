@@ -17,11 +17,9 @@ public:
 	{
 		ui.setupUi(this);
 		
-		connect(ui.MovementDuration, SIGNAL(valueChanged(double)),this,SLOT(on_MovementDuration_valueChanged2(double)));
 		rebroadcastQtAdapter.setRebroadcastManager(&rebroadcastManager);
 		rebroadcastQtAdapter.addWithChildren(this);
-
-		
+	
 	}
 	void acceptChildUI(QWidget* child)
 	{
@@ -41,7 +39,7 @@ public slots:
 	void on_startButton_clicked();
 	void on_initializeOptotrakButton_clicked();
 	void on_initializeRealtimeButton_clicked();
-	void on_MovementDuration_valueChanged2(double value);
+	void on_setZero_clicked();
 protected:
 	CenterOutPlugin* plugin;
 	Ui::TutorialDialog ui;

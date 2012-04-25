@@ -37,6 +37,55 @@ public:
 	struct CursorPosition
 	{
 		float x, y, z;
+		CursorPosition():x(0.f),y(0.f),z(0.f){}
+		CursorPosition operator - (const CursorPosition& rhs)
+		{
+			CursorPosition newPos;
+			newPos.x = x-rhs.x;
+			newPos.y = y-rhs.y;
+			newPos.z = z-rhs.z;
+			return newPos;
+		}
+		CursorPosition operator + (const CursorPosition& rhs)
+		{
+			CursorPosition newPos;
+			newPos.x = x+rhs.x;
+			newPos.y = y+rhs.y;
+			newPos.z = z+rhs.z;
+			return newPos;
+		}
+		CursorPosition operator* (const CursorPosition& rhs)
+		{ 
+			CursorPosition newPos;
+			newPos.x = x*rhs.x;
+			newPos.y = y*rhs.y;
+			newPos.z = z*rhs.z;
+			return newPos;
+		}
+		CursorPosition operator/ (const CursorPosition& rhs)
+		{ 
+			CursorPosition newPos;
+			newPos.x = x/rhs.x;
+			newPos.y = y/rhs.y;
+			newPos.z = z/rhs.z;
+			return newPos;
+		}
+		CursorPosition operator* (double rhs)
+		{ 
+			CursorPosition newPos;
+			newPos.x = x*rhs;
+			newPos.y = y*rhs;
+			newPos.z = z*rhs;
+			return newPos;
+		}
+		CursorPosition operator/ (double rhs)
+		{ 
+			CursorPosition newPos;
+			newPos.x = x/rhs;
+			newPos.y = y/rhs;
+			newPos.z = z/rhs;
+			return newPos;
+		}
 	};
 	void setCursorPosition(CenterOut::CursorPosition pos){cpBuffer.setData(pos);}
 private:
@@ -65,7 +114,10 @@ public:
 		target->setColor(0.,1.,.5);
 		target->setTransparency(.3f);
 
-		camera->setViewMatrix(osg::Matrix::lookAt(osg::Vec3(0.,-40.,0.),osg::Vec3(0.,0.,0.),osg::Vec3(0.,0.,1.)));
+		//camera: setViewMatrix: takes 3 vectors: eye(where the camera is located)
+		//                                        center(where the camera is pointing)
+		//                                        up(changes the tilt of the camera)
+		camera->setViewMatrix(osg::Matrix::lookAt(osg::Vec3(40.,0.,0.),osg::Vec3(0.,0.,0.),osg::Vec3(0.,-1.,0.)));
 
 		changeState(CenterOut::PRE_HOLD_A);
 
@@ -89,6 +141,11 @@ public:
 	{
 		rebroadcastManager = rbm;
 	}
+	void setZero()
+	{
+		zeroPosition = cpBuffer.getData();
+		printf("setZero: %f %f %f\n",zeroPosition.x,zeroPosition.y,zeroPosition.z);
+	}
 private:
 	osg::ref_ptr<GroupElement> scene;
 	osg::ref_ptr<SphereElement> center;
@@ -98,6 +155,7 @@ private:
 	RebroadcastManager* rebroadcastManager;
 	NerveThread logicThread;
 	LogicModule* logicModule;
+	CursorPosition zeroPosition;
 	
 	enum STATE
 	{
@@ -258,7 +316,8 @@ private:
 	}
 	void updateCursor()
 	{
-		CenterOut::CursorPosition p(cpBuffer.getData());
+		CenterOut::CursorPosition raw(cpBuffer.getData());
+		CenterOut::CursorPosition p = (raw - zeroPosition) * 0.05;
 		cursor->setTranslation(p.x,p.y,p.z);
 	}
 	void getGuiValues()
@@ -269,9 +328,9 @@ private:
 	{
 		int t = rand()%8;
 		double angle = 3.14159/4 * t;
-		double x = 10.0 * cos(angle);
-		double y = 0.;
-		double z = 10.0 * sin(angle);
+		double x = 0.;
+		double y = 10.0 * sin(angle);
+		double z = 10.0 * cos(angle);
 		target->setTranslation(x,y,z);
 
 	}
